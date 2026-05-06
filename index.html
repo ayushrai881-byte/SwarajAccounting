@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swaraj Payments — Master Ledger</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-badge"><div class="logo-icon">💰</div><div><h1>Swaraj Payments</h1><p>Master Business Ledger</p></div></div>
+    <div class="logo-badge"><div class="logo-icon">💰</div><div><h1>Swaraj Payments</h1><p style="font-size:0.6rem; opacity:0.6;">Master Business Ledger</p></div></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Overview</div>
@@ -34,113 +33,115 @@
 </aside>
 
 <main class="main">
+  <!-- DASHBOARD -->
   <section class="section active" id="tab-dashboard">
     <div class="page-header">
-      <div><h2>📊 Dashboard</h2><p>Real-time financial analytics</p></div>
+      <div><h2>📊 Dashboard</h2><p style="font-size:0.75rem; opacity:0.6;">Real-time financial analytics</p></div>
       <div class="header-actions">
-        <button class="btn btn-ghost" onclick="injectSampleData()">🧪 Sample Data</button>
+        <button class="btn btn-ghost" onclick="injectSampleData()">🧪 Sample</button>
         <button class="btn btn-primary" onclick="doExportPDF()">📄 Export Report</button>
       </div>
     </div>
     <div class="cards-grid" id="dash-stats"></div>
     <div class="charts-grid">
-      <div class="chart-card"><h3>💼 Expense by Category</h3><div class="chart-wrap"><canvas id="chart-cat"></canvas></div></div>
-      <div class="chart-card"><h3>🏦 Volume by Account</h3><div class="chart-wrap"><canvas id="chart-method"></canvas></div></div>
+      <div class="chart-card"><h3>💼 Category Breakdown</h3><div class="chart-wrap"><canvas id="chart-cat"></canvas></div></div>
+      <div class="chart-card"><h3>🏦 Account Volume</h3><div class="chart-wrap"><canvas id="chart-method"></canvas></div></div>
       <div class="chart-card"><h3>📅 Monthly Trend</h3><div class="chart-wrap"><canvas id="chart-trend"></canvas></div></div>
-      <div class="chart-card"><h3>📊 Partner Flow (In/Out)</h3><div class="chart-wrap"><canvas id="chart-ei"></canvas></div></div>
+      <div class="chart-card"><h3>📊 Cash Flow</h3><div class="chart-wrap"><canvas id="chart-ei"></canvas></div></div>
     </div>
   </section>
 
+  <!-- SETTLEMENT HUB -->
   <section class="section" id="tab-settlement">
-    <div class="page-header"><div><h2>⚖️ Settlement Ledger</h2><p>Analyze money flow between accounts</p></div></div>
-    <div class="card mb-24" style="background: var(--surface2); border: 1px solid var(--accent-dim);">
-        <h3 style="font-size:0.9rem; color:var(--accent); margin-bottom:12px;">🧮 Settlement Calculator (Multi-Select)</h3>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
-            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid From</h4><div id="calc-from-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
-            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid To</h4><div id="calc-to-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
-            <div style="min-width:250px; text-align:right;"><div class="card-label">Resulting Amount</div><div class="card-value income" style="font-size:3.5rem; line-height:1;" id="calc-total">₹0</div><button class="btn btn-ghost btn-sm mt-16" onclick="resetCalculator()">↺ Reset</button></div>
+    <div class="page-header"><div><h2>⚖️ Settlement Hub</h2><p style="font-size:0.75rem; opacity:0.6;">Conclusive financial summary</p></div></div>
+    <div class="flex gap-16 mb-16" style="flex-wrap:wrap;">
+        <div class="card" style="flex:2; min-width:300px; margin-bottom:0;">
+            <div class="flex" style="justify-content:space-between; align-items:center; margin-bottom:12px;"><h3 style="color:var(--accent); font-size:0.9rem;">🧮 Calculator Filters</h3><button class="btn btn-ghost btn-sm" onclick="resetCalculator()">↺ Reset</button></div>
+            <div class="flex gap-12" style="flex-wrap:wrap;"><div style="flex:1; min-width:140px;"><label class="nav-label">From</label><div id="calc-from-list" style="height:140px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:12px; margin-top:4px;"></div></div><div style="flex:1; min-width:140px;"><label class="nav-label">To</label><div id="calc-to-list" style="height:140px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:12px; margin-top:4px;"></div></div></div>
+        </div>
+        <div class="card" style="flex:1; min-width:250px; margin-bottom:0; display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid var(--accent);"><div class="card-label">NET RESULT</div><div class="card-value" id="calc-total" style="font-size:3rem; margin:8px 0;">₹0</div><div style="font-size:0.6rem; padding:4px 12px; background:var(--accent); border-radius:20px; color:white;">Filtered Total</div></div>
+    </div>
+    <div class="table-wrap"><div style="padding:16px 24px; border-bottom:1px solid rgba(255,255,255,0.05);"><h3 style="font-size:0.9rem; font-weight:800;">🏁 Final Conclusive Summary</h3></div><table><thead><tr><th style="padding-left:24px;">From</th><th>To</th><th>Total Amount</th><th style="text-align:right; padding-right:24px;">Status</th></tr></thead><tbody id="settlement-tbody"></tbody></table></div>
+  </section>
+
+  <!-- DATA IMPORT HUB -->
+  <section class="section" id="tab-import">
+    <div class="page-header"><div><h2>➕ Data Management</h2><p style="font-size:0.75rem; opacity:0.6;">WhatsApp import and manual ledger entry</p></div></div>
+    <div style="display:grid; grid-template-columns: 1.2fr 1.8fr; gap:20px; align-items: start;">
+        <div class="card">
+            <h3 style="margin-bottom:16px; font-size:1rem;">📱 WhatsApp Import</h3>
+            <label class="nav-label">Paste Chat History</label>
+            <textarea id="wa-paste" style="height:150px; margin:8px 0 16px 0;" placeholder="Paste chat data..."></textarea>
+            <div class="flex gap-12"><button class="btn btn-primary" style="flex:1;" onclick="parseAndPreview()">🔍 Parse</button><button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">📁 .txt</button><input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(this)" /></div>
+            <div id="preview-section" style="display:none; margin-top:24px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><h4 style="font-size:0.8rem;">Found <span id="preview-count">0</span> Records</h4><button class="btn btn-primary btn-sm" onclick="confirmImport()">✅ Save All</button></div><div class="table-wrap" style="max-height:200px; overflow-y:auto;"><table style="font-size:0.7rem;"><thead><tr><th>Amt</th><th>From</th><th>To</th><th></th></tr></thead><tbody id="preview-tbody"></tbody></table></div></div>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom:16px; font-size:1rem;">✏️ Manual Entry</h3>
+            <form onsubmit="event.preventDefault(); saveManualTx();">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;"><div><label class="nav-label">Date</label><input type="date" id="m-date" required style="margin-top:4px;"/></div><div><label class="nav-label">Amount</label><input type="number" id="m-amount" required style="margin-top:4px;" placeholder="0.00"/></div></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;"><div><label class="nav-label">Paid By</label><input list="methods-dl" id="m-paid-by" required style="margin-top:4px;"/></div><div><label class="nav-label">Paid To</label><input list="methods-dl" id="m-paid-to" required style="margin-top:4px;"/></div></div>
+                <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:24px;"><div><label class="nav-label">Description</label><input type="text" id="m-desc" required style="margin-top:4px;"/></div><div><label class="nav-label">Category</label><select id="m-cat" style="margin-top:4px;"></select></div></div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;">✅ Save Transaction</button>
+            </form>
         </div>
     </div>
-    <div class="cards-grid" id="settlement-summary"></div>
-    <div class="table-wrap mt-24"><table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Description</th></tr></thead><tbody id="settlement-tbody"></tbody></table></div>
   </section>
 
+  <!-- TRANSACTIONS -->
   <section class="section" id="tab-transactions">
-    <div class="page-header"><div><h2>📋 All Transactions</h2><p>Advanced history and editing</p></div><div class="header-actions"><button class="btn btn-ghost" onclick="doExportExcel()">📥 Export Excel</button></div></div>
-    <!-- FIXED HORIZONTAL FILTER BAR -->
+    <div class="page-header"><div><h2>📋 Transactions</h2></div><button class="btn btn-ghost" onclick="doExportExcel()">📥 Export Excel</button></div>
     <div class="filter-bar">
       <div class="filter-group"><label>🔍 Search</label><input type="text" id="f-search" placeholder="Description..." /></div>
       <div class="filter-group"><label>📅 Date</label><input type="date" id="f-date" /></div>
       <div class="filter-group"><label>🏦 From</label><select id="f-paid-by"><option value="">All</option></select></div>
       <div class="filter-group"><label>📥 To</label><select id="f-paid-to"><option value="">All</option></select></div>
       <div class="filter-group"><label>🏷️ Category</label><select id="f-cat"><option value="">All</option></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="margin-top:auto; height:40px;">✕</button>
+      <button class="btn btn-ghost" onclick="clearFilters()" style="height:38px; width:44px; justify-content:center;">✕</button>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>Paid By</th><th>Paid To</th><th>Description</th><th>Category</th><th>Actions</th></tr></thead><tbody id="tx-tbody"></tbody></table></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="padding-left:16px; width:60px;">S.No</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th style="text-align:right; padding-right:16px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tx-tbody"></tbody>
+        </table>
+    </div>
   </section>
 
+  <!-- TRASH (ADDED S.NO) -->
   <section class="section" id="tab-trash">
-    <div class="page-header"><h2>🗑️ Recycle Bin</h2><p>Restore deleted entries</p></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Empty Trash</button></div>
-    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Description</th><th>Deleted On</th><th>Actions</th></tr></thead><tbody id="trash-tbody"></tbody></table></div>
-  </section>
-
-  <section class="section" id="tab-import">
-    <div class="page-header"><h2>➕ Add / Import Data</h2></div>
-    <div class="import-tabs">
-      <button class="import-tab active" data-itab="paste" onclick="switchImportTab('paste')">📱 WhatsApp Import</button>
-      <button class="import-tab" data-itab="manual" onclick="switchImportTab('manual')">✏️ Manual Entry</button>
-    </div>
-    <div class="import-pane active" id="ipane-paste">
-      <p style="font-size:0.8rem; margin-bottom:10px; color:var(--text2);">Format: <code>[10:46 am, 11/4/2026] Rahil Sagar: 2000 ... By AU</code></p>
-      <textarea class="paste-area" id="wa-paste" placeholder="Paste WhatsApp chat export here..."></textarea>
-      <div class="mt-8 flex gap-12">
-        <button class="btn btn-primary" onclick="parseAndPreview()">🔍 Parse & Preview</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">📁 Upload .txt</button>
-        <input type="file" id="file-input" accept=".txt" style="display:none;" onchange="handleFileUpload(this)" />
-      </div>
-      <div id="preview-section" style="display:none; margin-top:24px;">
-        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Desc</th><th></th></tr></thead><tbody id="preview-tbody"></tbody></table></div>
-        <button class="btn btn-primary mt-8" onclick="confirmImport()">✅ Save All Entries</button>
-      </div>
-    </div>
-    <div class="import-pane" id="ipane-manual">
-        <div class="form-card"><form onsubmit="event.preventDefault(); saveManualTx();">
-            <div class="form-grid"><div class="field-group"><label>Date</label><input type="date" id="m-date" required /></div><div class="field-group"><label>Amount</label><input type="number" id="m-amount" required /></div></div>
-            <div class="form-grid"><div class="field-group"><label>From</label><input list="methods-dl" id="m-paid-by" required /></div><div class="field-group"><label>To</label><input list="methods-dl" id="m-paid-to" required /></div></div>
-            <div class="field-group"><label>Description</label><input type="text" id="m-desc" required /></div>
-            <div class="field-group"><label>Category</label><select id="m-cat"></select></div>
-            <button type="submit" class="btn btn-primary" style="width:100%">✅ Save</button>
-        </form></div>
+    <div class="page-header"><div><h2>🗑️ Trash</h2></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Empty</button></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="padding-left:16px; width:60px;">S.No</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Desc</th>
+                    <th style="text-align:right; padding-right:16px;"></th>
+                </tr>
+            </thead>
+            <tbody id="trash-tbody"></tbody>
+        </table>
     </div>
   </section>
 
-  <section class="section" id="tab-settings">
-    <div class="page-header"><h2>⚙️ Settings & Cloud Sync</h2></div>
-    <div class="settings-grid">
-      <div class="settings-section">
-        <h3>📊 Google Sheets Sync</h3>
-        <input type="text" id="gsheet-url" style="width:100%; margin-bottom:10px;" />
-        <div class="flex gap-12 mb-24">
-            <button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save URL</button>
-            <button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync All to Sheet</button>
-        </div>
-        <hr style="opacity:0.1; margin:20px 0;"/>
-        <h3 style="color:var(--danger);">🚨 Maintenance</h3>
-        <p class="text-muted text-small mb-12">Use this to clear all local data if it becomes too large or messy.</p>
-        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Reset Everything (Wipe All Data)</button>
-        <p id="sync-status" class="text-small mt-8" style="color:var(--accent);"></p>
-      </div>
-      <div class="settings-section"><h3>🏦 Managed Accounts</h3><div class="settings-list" id="methods-list"></div><div class="add-row"><input type="text" id="new-method-input" /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div>
-      <div class="settings-section"><h3>🏷️ Categories</h3><div class="settings-list" id="cats-list"></div></div>
-    </div>
-  </section>
+  <section class="section" id="tab-settings"><div class="page-header"><h2>⚙️ Settings</h2></div><div class="settings-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card"><h3>📊 Sync</h3><input type="text" id="gsheet-url" class="mt-16 mb-16" placeholder="Web App URL..." /><div class="flex gap-12"><button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save</button><button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync</button></div><p id="sync-status" class="mt-16" style="font-size:0.7rem;"></p><hr style="opacity:0.1; margin:20px 0;"/><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Wipe Data</button></div><div class="card"><h3>🏦 Accounts</h3><div id="methods-list" class="mt-16 mb-16" style="max-height:150px; overflow-y:auto;"></div><div class="flex gap-12"><input type="text" id="new-method-input" placeholder="New..." /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div></div></section>
 </main>
 
-<datalist id="methods-dl"></datalist>
-<div id="toast-container"></div>
-
-<script src="parser.js"></script>
-<script src="app.js"></script>
-<script src="export.js"></script>
+<datalist id="methods-dl"></datalist><div id="toast-container"></div>
+<script src="parser.js"></script><script src="app.js"></script><script src="export.js"></script>
 </body>
 </html>
