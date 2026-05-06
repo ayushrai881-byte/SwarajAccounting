@@ -1,5 +1,5 @@
 // ============================================================
-// SWARAJ PAYMENTS TRACKER — MASTER v8 (FULL SYNC)
+// SWARAJ PAYMENTS TRACKER — MASTER v9 (PREVENT DOUBLE SAVE)
 // ============================================================
 
 const DB_KEY = 'sp_master_txs';
@@ -50,7 +50,6 @@ async function syncAllToGSheet() {
     const status = document.getElementById('sync-status');
     if (!localStorage.getItem(GSHEET_KEY)) return showToast('Set Sync URL first!', 'error');
     if (!txs.length) return showToast('No data to sync!');
-    
     status.textContent = "Syncing... Please wait.";
     for (let i = 0; i < txs.length; i++) {
         await syncToGSheet(txs[i]);
@@ -164,11 +163,13 @@ function renderSettlement() {
   document.getElementById('settlement-tbody').innerHTML = txs.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50).map(t => `<tr><td>${t.date}</td><td><strong>${t.paidBy}</strong></td><td><strong>${t.paidTo}</strong></td><td>₹${t.amount}</td><td class="text-muted">${t.description}</td></tr>`).join('');
 }
 
-// ── IMPORT & UTILS ────────────────────────────────────────────
+// ── IMPORT & UTILS (FIXED DOUBLE SAVE) ────────────────────────
 function parseAndPreview() {
     pendingImport = SP_Parser.parseWhatsAppText(document.getElementById('wa-paste').value);
-    document.getElementById('preview-section').style.display = 'block';
-    document.getElementById('preview-tbody').innerHTML = pendingImport.map((t, i) => `<tr><td>${t.date}</td><td>₹${t.amount}</td><td>${t.paidBy}</td><td>${t.paidTo}</td><td>${t.description}</td><td><button onclick="removePending(${i})">✕</button></td></tr>`).join('');
+    if (pendingImport.length > 0) {
+        document.getElementById('preview-section').style.display = 'block';
+        document.getElementById('preview-tbody').innerHTML = pendingImport.map((t, i) => `<tr><td>${t.date}</td><td>₹${t.amount}</td><td>${t.paidBy}</td><td>${t.paidTo}</td><td>${t.description}</td><td><button onclick="removePending(${i})">✕</button></td></tr>`).join('');
+    }
 }
 
 function handleFileUpload(input) {
@@ -177,11 +178,29 @@ function handleFileUpload(input) {
 }
 
 function removePending(i) { pendingImport.splice(i,1); parseAndPreview(); }
+
 async function confirmImport() {
-    saveTransactions([...getTransactions(), ...pendingImport]);
-    for (const t of pendingImport) await syncToGSheet(t);
-    pendingImport = []; document.getElementById('preview-section').style.display='none'; document.getElementById('wa-paste').value='';
-    showToast('Imported & Synced!'); switchTab('dashboard');
+    if (pendingImport.length === 0) return;
+    
+    // 1. Immediately copy data and clear global pending state
+    const dataToSave = [...pendingImport];
+    pendingImport = []; 
+    
+    // 2. Hide UI immediately so user can't click again
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('wa-paste').value = '';
+    
+    // 3. Save locally
+    saveTransactions([...getTransactions(), ...dataToSave]);
+    
+    // 4. Sync to cloud in background
+    showToast(`Saving ${dataToSave.length} entries...`);
+    for (const t of dataToSave) {
+        await syncToGSheet(t);
+    }
+    
+    showToast('Imported & Cloud Synced!'); 
+    switchTab('dashboard');
 }
 
 function deleteTx(id) { const txs = getTransactions(); const tx = txs.find(t => t.id === id); if (!tx) return; saveTransactions(txs.filter(t => t.id !== id)); saveTrash([...getTrash(), { ...tx, deletedAt: new Date().toLocaleString() }]); showToast('Moved to Trash'); refreshUI(); }
