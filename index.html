@@ -173,8 +173,17 @@
     <div class="page-header"><h2>⚙️ Settings</h2></div>
     <div class="settings-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
         <div class="card">
-            <h3>📊 Sync</h3>
-<input type="text" id="gsheet-url" class="mt-16 mb-16" placeholder="Web App URL..." /><div class="flex gap-12"><button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save</button><button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync</button></div><p id="sync-status" class="mt-16" style="font-size:0.7rem;"></p><hr style="opacity:0.1; margin:20px 0;"/><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Wipe Data</button></div><div class="card"><h3>🏦 Account Classification</h3><p style="font-size:0.65rem; opacity:0.6; margin-bottom:12px;">Mark accounts that are **Online**. Others will be **Cash**.</p><div id="methods-online-list" class="mt-16 mb-16" style="max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;"></div><div class="flex gap-12"><input type="text" id="new-method-input" placeholder="New Account..." /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div></div></section>
+            <h3>📊 Sync & Backup</h3>
+            <input type="text" id="gsheet-url" class="mt-16 mb-16" placeholder="Web App URL..." />
+            <div class="flex gap-12" style="flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save URL</button>
+                <button class="btn btn-ghost btn-sm" onclick="loadFromSheet()">📥 Import from Sheet</button>
+            </div>
+            <p id="sync-status" class="mt-16" style="font-size:0.7rem; opacity:0.6;">*Importing will only add missing entries.</p>
+            <hr style="opacity:0.1; margin:20px 0;"/>
+            <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Wipe Local Data</button>
+        </div>
+<div class="card"><h3>🏦 Account Classification</h3><p style="font-size:0.65rem; opacity:0.6; margin-bottom:12px;">Mark accounts that are **Online**. Others will be **Cash**.</p><div id="methods-online-list" class="mt-16 mb-16" style="max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;"></div><div class="flex gap-12"><input type="text" id="new-method-input" placeholder="New Account..." /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div></div></section>
 </main>
 
 <datalist id="methods-dl"></datalist>
