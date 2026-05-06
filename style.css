@@ -209,7 +209,34 @@ input:focus { border-color: var(--accent); outline: none; }
   .card-value { font-size: 1.2rem; }
   .card-label { font-size: 0.6rem; }
   .main { padding: 10px; padding-bottom: 70px; }
+}/* CALCULATOR / DROPDOWN ITEMS (STRICT FIX) */
+.calc-list { display: flex; flex-direction: column; gap: 4px; padding: 5px; }
+.dropdown-item { 
+    display: flex !important; 
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important; 
+    gap: 15px !important; 
+    padding: 12px 15px !important; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    transition: 0.2s;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    width: 100% !important;
+    margin-bottom: 5px;
 }
-
-
-
+.dropdown-item:hover { background: rgba(255,255,255,0.1) !important; border-color: var(--accent) !important; }
+.dropdown-item input[type="checkbox"] { 
+    width: 20px !important; 
+    height: 20px !important; 
+    margin: 0 !important;
+    cursor: pointer; 
+    flex-shrink: 0;
+}
+.dropdown-item span { 
+    font-size: 0.9rem !important; 
+    color: var(--text) !important; 
+    text-align: left !important;
+    pointer-events: none;
+}
