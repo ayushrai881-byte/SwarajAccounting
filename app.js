@@ -1,6 +1,8 @@
 // ============================================================
-// SWARAJ PAYMENTS TRACKER — MASTER v42 (STABLE ENGINE)
+// SWARAJ PAYMENTS TRACKER — MASTER v43 (HARDCODED CLOUD SYNC)
 // ============================================================
+
+const GSHEET_MASTER_URL = 'https://script.google.com/macros/s/AKfycbywkkVpHXe95HhupFSKwOxLjnXNm0Un6zJMClYhX30wl94STFFTxmu5wvrJiQ0n42m3lQ/exec';
 
 const DB_KEY = 'sp_master_txs';
 const TRASH_KEY = 'sp_master_trash';
@@ -10,7 +12,6 @@ const ONLINE_METHODS_KEY = 'sp_master_online_methods';
 const DEAL_TOTALS_KEY = 'sp_master_deal_totals';
 
 let allCharts = {};
-let pendingImport = [];
 let customerDeals = [];
 
 // ── STATE MANAGEMENT ──────────────────────────────────────────
@@ -19,7 +20,12 @@ function saveTransactions(arr) { localStorage.setItem(DB_KEY, JSON.stringify(arr
 function getTrash() { return JSON.parse(localStorage.getItem(TRASH_KEY) || '[]'); }
 function saveTrash(arr) { localStorage.setItem(TRASH_KEY, JSON.stringify(arr)); }
 function getDealTotals() { return JSON.parse(localStorage.getItem(DEAL_TOTALS_KEY) || '{}'); }
-function saveDealTotal(name, amt) { const dt = getDealTotals(); dt[name] = amt; localStorage.setItem(DEAL_TOTALS_KEY, JSON.stringify(dt)); syncDealToCloud(name, amt); }
+function saveDealTotal(name, amt) { 
+    const dt = getDealTotals(); 
+    dt[name] = amt; 
+    localStorage.setItem(DEAL_TOTALS_KEY, JSON.stringify(dt)); 
+    syncDealToCloud(name, amt); 
+}
 
 function getMethods() {
     const def = ['AU Bank', 'SBI CC', 'Ayush', 'Rahil', 'Cash', 'Swaraj', 'ICICI Bank', 'Customer'];
@@ -39,29 +45,24 @@ function getAllActiveNames() {
 
 function getCategories() { return ['Fuel', 'Salary', 'Travel', 'Petty Cash', 'Sales', 'Refund', 'Showroom', 'Food', 'Maintenance', 'Utilities', 'Office', 'Miscellaneous']; }
 
-// ── MASTER CLOUD SYNC ─────────────────────────────────────────
+// ── MASTER CLOUD SYNC (ZERO-CONFIG) ───────────────────────────
 async function syncToCloud(tx) {
-    const url = localStorage.getItem(GSHEET_KEY);
-    if (!url) return;
-    try { await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'tx', data: tx }) }); } catch (e) { console.error('Sync Error:', e); }
+    try { await fetch(GSHEET_MASTER_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'tx', data: tx }) }); } catch (e) { console.error('Sync Error:', e); }
 }
 
 async function syncDealToCloud(name, amount) {
-    const url = localStorage.getItem(GSHEET_KEY);
-    if (!url) return;
-    try { await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'deal', name: name, amount: amount }) }); } catch (e) { console.error('Deal Sync Error:', e); }
+    try { await fetch(GSHEET_MASTER_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'deal', name: name, amount: amount }) }); } catch (e) { console.error('Deal Sync Error:', e); }
 }
 
 async function autoLoadFromCloud() {
-    const url = localStorage.getItem(GSHEET_KEY);
-    if (!url) return;
     try {
-        const res = await fetch(url);
+        const res = await fetch(GSHEET_MASTER_URL);
         const data = await res.json();
         const txs = (data.txs || []).map(t => ({ ...t, isCustomer: t.isCustomer === true || t.isCustomer === 'true', isDeleted: t.isDeleted === true || t.isDeleted === 'true', amount: parseFloat(t.amount) || 0 }));
         localStorage.setItem(DB_KEY, JSON.stringify(txs));
         if (data.deals) localStorage.setItem(DEAL_TOTALS_KEY, JSON.stringify(data.deals));
         refreshUI();
+        console.log('Cloud Sync Success: ' + txs.length + ' entries.');
     } catch (e) { console.error('Auto-Load Error:', e); }
 }
 
@@ -113,20 +114,28 @@ function renderCustomerLedger() {
     }).join('') || '<tr><td colspan="6" style="text-align:center; padding:40px; opacity:0.5;">No deals found.</td></tr>';
 }
 
+function viewDealDetails(dealName) {
+    const txs = getTransactions().filter(t => t.isCustomer && t.description === dealName).sort((a,b) => b.date.localeCompare(a.date));
+    const modalHtml = `<div id="modal-overlay-audit" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center;"><div class="card" style="width:90%; max-width:850px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;"><div class="page-header" style="padding:20px; border-bottom:1px solid rgba(255,255,255,0.1);"><h3>🔍 Deal Audit: ${dealName}</h3><button class="btn btn-ghost" onclick="document.getElementById('modal-overlay-audit').remove()">✕</button></div><div style="flex:1; overflow-y:auto; padding:20px;"><table style="font-size:0.75rem;"><thead><tr><th>Date</th><th>Amount</th><th>Description</th><th style="text-align:right;">Action</th></tr></thead><tbody id="audit-tbody">${txs.map(t => `<tr id="audit-row-${t.id}"><td>${fmtDate(t.date)}</td><td style="font-weight:700;">₹${t.amount.toLocaleString()}</td><td style="opacity:0.7;">${t.description}</td><td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="unlinkFromDeal('${t.id}', '${dealName}')">🔗 Remove</button></td></tr>`).join('')}</tbody></table></div><div style="padding:20px; text-align:right;"><button class="btn btn-primary" onclick="document.getElementById('modal-overlay-audit').remove()">Close</button></div></div></div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function unlinkFromDeal(id, dealName) { if (!confirm('Unlink?')) return; const txs = getTransactions(); const idx = txs.findIndex(t => t.id === id); if (idx !== -1) { txs[idx].isCustomer = false; syncToCloud(txs[idx]); saveTransactions(txs); document.getElementById(`audit-row-${id}`).remove(); renderCustomerLedger(); if (document.querySelectorAll('#audit-tbody tr').length === 0) document.getElementById('modal-overlay-audit').remove(); } }
+function openBulkLinkModal(dealName = '') { const txs = getTransactions().filter(t => !t.isCustomer).sort((a,b) => b.date.localeCompare(a.date)); const modalHtml = `<div id="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center;"><div class="card" style="width:95%; max-width:900px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column;"><div class="page-header" style="padding:20px; border-bottom:1px solid rgba(255,255,255,0.1);"><h3>🔗 Link Transactions to Deal</h3><button class="btn btn-ghost" onclick="document.getElementById('modal-overlay').remove()">✕</button></div><div style="flex:1; overflow-y:auto; padding:0;"><table><thead><tr><th>Select</th><th>Date</th><th>Amount</th><th>Description</th></tr></thead><tbody>${txs.map(t => `<tr><td><input type="checkbox" class="link-cb" value="${t.id}" data-desc="${t.description}"></td><td>${fmtDate(t.date)}</td><td>₹${t.amount}</td><td>${t.description}</td></tr>`).join('')}</tbody></table></div><div style="padding:20px; text-align:right;"><button class="btn btn-primary" onclick="confirmBulkLink('${dealName}')">Confirm Link</button></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); }
+function confirmBulkLink(dealName) { const selectedIds = Array.from(document.querySelectorAll('.link-cb:checked')).map(cb => cb.value); const txs = getTransactions(); txs.forEach(t => { if (selectedIds.includes(t.id)) { t.isCustomer = true; t.description = dealName || t.description; syncToCloud(t); } }); saveTransactions(txs); document.getElementById('modal-overlay').remove(); refreshUI(); }
+
 // ── SETTLEMENT HUB LOGIC ──────────────────────────────────────
 function renderCalculatorFilters() {
     const allNames = getAllActiveNames();
     const fromList = document.getElementById('calc-from-list');
     const toList = document.getElementById('calc-to-list');
     if (!fromList || !toList) return;
-
     const generateItems = (prefix) => allNames.map(m => `
         <label class="dropdown-item" style="padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; background:rgba(255,255,255,0.02); margin-bottom:4px; border-radius:6px;">
             <input type="checkbox" class="calc-cb" data-prefix="${prefix}" value="${m}" onchange="runCalculator()" style="width:16px; height:16px;">
             <span style="font-size:0.85rem; color:var(--text);">${m}</span>
         </label>
     `).join('');
-
     fromList.innerHTML = generateItems('from');
     toList.innerHTML = generateItems('to');
 }
@@ -135,11 +144,7 @@ function runCalculator() {
     const fromSel = Array.from(document.querySelectorAll('.calc-cb[data-prefix="from"]:checked')).map(c => c.value);
     const toSel = Array.from(document.querySelectorAll('.calc-cb[data-prefix="to"]:checked')).map(c => c.value);
     const txs = getTransactions();
-    const filtered = txs.filter(t => {
-        if (fromSel.length > 0 && !fromSel.includes(t.paidBy)) return false;
-        if (toSel.length > 0 && !toSel.includes(t.paidTo)) return false;
-        return true;
-    });
+    const filtered = txs.filter(t => { if (fromSel.length > 0 && !fromSel.includes(t.paidBy)) return false; if (toSel.length > 0 && !toSel.includes(t.paidTo)) return false; return true; });
     document.getElementById('calc-total').textContent = fmtCurrency(filtered.reduce((sum, t) => sum + t.amount, 0));
     renderConclusiveTable(filtered);
 }
@@ -171,26 +176,13 @@ function saveManualTx() {
     syncToCloud(tx); showToast('Saved!'); ['m-date','m-amount','m-paid-by','m-paid-to','m-desc'].forEach(id => document.getElementById(id).value = ''); refreshUI(); 
 }
 
-function injectSampleData() {
-    if (!confirm('Add 5 sample entries?')) return;
-    const m = getMethods();
-    const s = [];
-    for(let i=1; i<=5; i++) {
-        s.push({ id:'s'+Date.now()+i, date:'2024-05-01', amount:Math.floor(Math.random()*5000) + 1000, paidBy:m[0], paidTo:m[1], description:'Sample Transaction '+i, category:'Showroom', isDeleted: false, isCustomer: false });
-    }
-    const current = getTransactions();
-    saveTransactions([...current, ...s]);
-    showToast('Sample Data Injected!');
-    refreshUI();
-}
-
+function injectSampleData() { if (!confirm('Add 5 sample entries?')) return; const m = getMethods(); const s = []; for(let i=1; i<=5; i++) { s.push({ id:'s'+Date.now()+i, date:'2024-05-01', amount:Math.floor(Math.random()*5000) + 1000, paidBy:m[0], paidTo:m[1], description:'Sample Transaction '+i, category:'Showroom', isDeleted: false, isCustomer: false }); } saveTransactions([...getTransactions(), ...s]); showToast('Sample Data Injected!'); refreshUI(); }
 function deleteTx(id) { const txs = getTransactions(); const tx = txs.find(t => t.id === id); if (!tx) return; tx.isDeleted = true; syncToCloud(tx); saveTransactions(txs.filter(t => t.id !== id)); saveTrash([...getTrash(), { ...tx, deletedAt: new Date().toLocaleString() }]); refreshUI(); }
 function updateDataLists() { const allNames = getAllActiveNames(); document.getElementById('methods-dl').innerHTML = allNames.map(m=>`<option value="${m}">`).join(''); }
 function fmtDate(d) { if(!d) return '-'; const p = d.split('-'); return p.length!==3 ? d : `${p[2]}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}-${p[0].slice(-2)}`; }
 function fmtCurrency(n) { return '₹' + n.toLocaleString('en-IN'); }
 function showToast(m) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.getElementById('toast-container').appendChild(t); setTimeout(() => t.remove(), 3000); }
-function renderSettings() { document.getElementById('gsheet-url').value = localStorage.getItem(GSHEET_KEY) || ''; }
-function saveGSheetUrl() { localStorage.setItem(GSHEET_KEY, document.getElementById('gsheet-url').value.trim()); showToast('URL Saved!'); autoLoadFromCloud(); }
+function renderSettings() { }
 
 document.addEventListener('DOMContentLoaded', () => { 
     refreshUI();
