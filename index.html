@@ -83,7 +83,7 @@
 
   <!-- TRASH SECTION -->
   <section class="section" id="tab-trash">
-    <div class="page-header"><div><h2>🗑️ Recycle Bin</h2><p>Restore deleted entries</p></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Permanently Empty Trash</button></div>
+    <div class="page-header"><h2>🗑️ Recycle Bin</h2><p>Restore deleted entries</p></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Permanently Empty Trash</button></div>
     <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Description</th><th>Deleted On</th><th>Actions</th></tr></thead><tbody id="trash-tbody"></tbody></table></div>
   </section>
 
@@ -95,18 +95,13 @@
       <button class="import-tab" data-itab="manual" onclick="switchImportTab('manual')">✏️ Manual Entry</button>
     </div>
     <div class="import-pane active" id="ipane-paste">
-      <!-- FORMAT GUIDE (Simple insertion, no style change) -->
       <p style="font-size:0.8rem; margin-bottom:10px; color:var(--text2);">Format: <code>[10:46 am, 11/4/2026] Rahil Sagar: 2000 ... By AU</code></p>
-      
       <textarea class="paste-area" id="wa-paste" placeholder="Paste WhatsApp chat export here..."></textarea>
-      
       <div class="mt-8 flex gap-12">
         <button class="btn btn-primary" onclick="parseAndPreview()">🔍 Parse & Preview</button>
-        <!-- NEW FILE UPLOAD BUTTON -->
         <button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">📁 Upload .txt</button>
         <input type="file" id="file-input" accept=".txt" style="display:none;" onchange="handleFileUpload(this)" />
       </div>
-      
       <div id="preview-section" style="display:none; margin-top:24px;">
         <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Desc</th><th></th></tr></thead><tbody id="preview-tbody"></tbody></table></div>
         <button class="btn btn-primary mt-8" onclick="confirmImport()">✅ Save All Entries</button>
@@ -127,7 +122,16 @@
   <section class="section" id="tab-settings">
     <div class="page-header"><h2>⚙️ Settings & Cloud Sync</h2></div>
     <div class="settings-grid">
-      <div class="settings-section"><h3>📊 Sync URL</h3><input type="text" id="gsheet-url" style="width:100%; margin-bottom:10px;" /><button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">Save</button></div>
+      <div class="settings-section">
+        <h3>📊 Google Sheets Sync</h3>
+        <p class="text-muted text-small mb-8">Paste Web App URL to sync data.</p>
+        <input type="text" id="gsheet-url" style="width:100%; margin-bottom:10px;" />
+        <div class="flex gap-12">
+            <button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save URL</button>
+            <button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync All Data to Sheet</button>
+        </div>
+        <p id="sync-status" class="text-small mt-8" style="color:var(--accent);"></p>
+      </div>
       <div class="settings-section"><h3>🏦 Managed Accounts</h3><div class="settings-list" id="methods-list"></div><div class="add-row"><input type="text" id="new-method-input" /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div>
       <div class="settings-section"><h3>🏷️ Categories</h3><div class="settings-list" id="cats-list"></div></div>
     </div>

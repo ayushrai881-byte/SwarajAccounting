@@ -66,44 +66,35 @@ function parseIsoDate(dateStr) {
 function parseMessageBlock(sender, dateStr, timeStr, lines) {
   if (!lines.length) return null;
 
-  // Find "By X" or "To X" line (search from bottom)
-  let byRaw = null, toRaw = null, tagIdx = -1;
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const byM = lines[i].match(/^By\s+(.+)$/i);
-    const toM = lines[i].match(/^To\s+(.+)$/i);
-    if (byM) { byRaw = byM[1].trim(); tagIdx = i; break; }
-    if (toM) { toRaw = toM[1].trim(); tagIdx = i; break; }
-  }
+  let fullText = lines.join(' ');
+  
+  // Find "By X" or "To X" tags
+  // Support both "By X" on a new line and "... By X" at the end of a line
+  let byRaw = null, toRaw = null;
+  
+  const byMatch = fullText.match(/\s*(?:\.\.\.\s*)?By\s+([^\.]+)(?:\.\.\.|$)/i);
+  const toMatch = fullText.match(/\s*(?:\.\.\.\s*)?To\s+([^\.]+)(?:\.\.\.|$)/i);
+  
+  if (byMatch) { byRaw = byMatch[1].trim(); fullText = fullText.replace(byMatch[0], ' '); }
+  if (toMatch) { toRaw = toMatch[1].trim(); fullText = fullText.replace(toMatch[0], ' '); }
+  
   if (!byRaw && !toRaw) return null;
 
-  // Parse amount from first line
-  const firstLine = lines[0];
+  // Clean up fullText from extra dots and spaces
+  fullText = fullText.replace(/\s*\.\.\.\s*/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Parse amount and description
   let amount = null, description = '';
-
-  const dashMatch = firstLine.match(/^([\d,]+)\s*[-–]\s*(.+)$/);
-  const numOnly   = firstLine.match(/^([\d,]+)$/);
-
-  if (dashMatch) {
-    amount = parseFloat(dashMatch[1].replace(/,/g, ''));
-    description = dashMatch[2].trim();
-    if (tagIdx > 1) description += ' ' + lines.slice(1, tagIdx).join(' ');
-  } else if (numOnly) {
-    amount = parseFloat(numOnly[1].replace(/,/g, ''));
-    description = lines.slice(1, tagIdx > 0 ? tagIdx : lines.length).join(' ').trim();
-  } else {
-    const numMatch = firstLine.match(/^([\d,]+)\s*(.*)/);
-    if (numMatch) {
-      amount = parseFloat(numMatch[1].replace(/,/g, ''));
-      description = (numMatch[2] + ' ' + lines.slice(1, tagIdx > 0 ? tagIdx : lines.length).join(' ')).trim();
-    }
+  
+  // Try to match amount at the start
+  const amountMatch = fullText.match(/^([\d,]+)\s*(.*)/);
+  if (amountMatch) {
+    amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+    description = amountMatch[2].trim();
   }
 
   if (!amount || isNaN(amount) || amount <= 0) return null;
-  description = description.replace(/\s+/g, ' ').trim() || 'No description';
-
-  // paidBy / paidTo
-  const paidBy = byRaw ? normalizeMethod(byRaw) : '';
-  const paidTo = toRaw ? normalizeMethod(toRaw) : '';
+  description = description.replace(/^[\s-:,.!]+|[\s-:,.!]+$/g, '') || 'No description';
 
   return {
     id: generateId(),
@@ -111,8 +102,8 @@ function parseMessageBlock(sender, dateStr, timeStr, lines) {
     time: timeStr.trim(),
     amount,
     description,
-    paidBy,
-    paidTo,
+    paidBy: byRaw ? normalizeMethod(byRaw) : '',
+    paidTo: toRaw ? normalizeMethod(toRaw) : '',
     category: detectCategory(description),
     source: 'whatsapp',
   };

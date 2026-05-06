@@ -1,5 +1,5 @@
 // ============================================================
-// SWARAJ PAYMENTS TRACKER — MASTER v7 (FILE UPLOAD)
+// SWARAJ PAYMENTS TRACKER — MASTER v8 (FULL SYNC)
 // ============================================================
 
 const DB_KEY = 'sp_master_txs';
@@ -45,12 +45,27 @@ async function syncToGSheet(tx) {
   if (url) { try { await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify(tx) }); } catch (e) {} }
 }
 
+async function syncAllToGSheet() {
+    const txs = getTransactions();
+    const status = document.getElementById('sync-status');
+    if (!localStorage.getItem(GSHEET_KEY)) return showToast('Set Sync URL first!', 'error');
+    if (!txs.length) return showToast('No data to sync!');
+    
+    status.textContent = "Syncing... Please wait.";
+    for (let i = 0; i < txs.length; i++) {
+        await syncToGSheet(txs[i]);
+        status.textContent = `Syncing: ${i + 1} / ${txs.length}`;
+    }
+    status.textContent = "✅ All data synced to Google Sheet!";
+    showToast('Success: All history uploaded!');
+}
+
 function saveGSheetUrl() {
   localStorage.setItem(GSHEET_KEY, document.getElementById('gsheet-url').value.trim());
   showToast('Cloud Sync URL Saved!');
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────
+// ── NAVIGATION & UI ───────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
@@ -67,7 +82,6 @@ function refreshUI() {
     updateDataLists();
 }
 
-// ── DASHBOARD & CHARTS ────────────────────────────────────────
 function renderDashboard() {
   const txs = getTransactions();
   const total = txs.reduce((s, t) => s + t.amount, 0);
@@ -97,7 +111,6 @@ function renderCharts(txs) {
   allCharts.ei = new Chart(document.getElementById('chart-ei'), { type: 'pie', data: { labels: ['Partner Out', 'Partner In'], datasets: [{ data: [flowD.out, flowD.in], backgroundColor: ['#ef4444', '#10b981'] }] }, options: { responsive: true, maintainAspectRatio: false } });
 }
 
-// ── TRANSACTIONS & CALCULATOR ─────────────────────────────────
 function renderTransactions() {
   const s = document.getElementById('f-search').value.toLowerCase();
   const d = document.getElementById('f-date').value;
@@ -151,26 +164,16 @@ function renderSettlement() {
   document.getElementById('settlement-tbody').innerHTML = txs.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50).map(t => `<tr><td>${t.date}</td><td><strong>${t.paidBy}</strong></td><td><strong>${t.paidTo}</strong></td><td>₹${t.amount}</td><td class="text-muted">${t.description}</td></tr>`).join('');
 }
 
-// ── IMPORT & FILE UPLOAD ──────────────────────────────────────
+// ── IMPORT & UTILS ────────────────────────────────────────────
 function parseAndPreview() {
-    const text = document.getElementById('wa-paste').value;
-    if (!text) return showToast('Please paste or upload text first', 'info');
-    pendingImport = SP_Parser.parseWhatsAppText(text);
-    if (!pendingImport.length) return showToast('No valid transactions found. Check format.', 'error');
+    pendingImport = SP_Parser.parseWhatsAppText(document.getElementById('wa-paste').value);
     document.getElementById('preview-section').style.display = 'block';
     document.getElementById('preview-tbody').innerHTML = pendingImport.map((t, i) => `<tr><td>${t.date}</td><td>₹${t.amount}</td><td>${t.paidBy}</td><td>${t.paidTo}</td><td>${t.description}</td><td><button onclick="removePending(${i})">✕</button></td></tr>`).join('');
 }
 
 function handleFileUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById('wa-paste').value = e.target.result;
-        showToast('File loaded! Click "Parse" to preview.');
-        parseAndPreview();
-    };
-    reader.readAsText(file);
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader(); reader.onload = (e) => { document.getElementById('wa-paste').value = e.target.result; parseAndPreview(); }; reader.readAsText(file);
 }
 
 function removePending(i) { pendingImport.splice(i,1); parseAndPreview(); }
@@ -181,7 +184,6 @@ async function confirmImport() {
     showToast('Imported & Synced!'); switchTab('dashboard');
 }
 
-// ── REMAINING UTILS ───────────────────────────────────────────
 function deleteTx(id) { const txs = getTransactions(); const tx = txs.find(t => t.id === id); if (!tx) return; saveTransactions(txs.filter(t => t.id !== id)); saveTrash([...getTrash(), { ...tx, deletedAt: new Date().toLocaleString() }]); showToast('Moved to Trash'); refreshUI(); }
 function restoreTx(id) { const trash = getTrash(); const tx = trash.find(t => t.id === id); if (!tx) return; saveTrash(trash.filter(t => t.id !== id)); saveTransactions([...getTransactions(), tx]); showToast('Restored!'); refreshUI(); }
 function emptyTrash() { if(confirm('Delete permanently?')) { saveTrash([]); refreshUI(); } }
