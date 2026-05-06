@@ -1,5 +1,5 @@
 // ============================================================
-// SWARAJ PAYMENTS TRACKER — MASTER v9 (PREVENT DOUBLE SAVE)
+// SWARAJ PAYMENTS TRACKER — MASTER v10 (CLEAN RESET)
 // ============================================================
 
 const DB_KEY = 'sp_master_txs';
@@ -27,6 +27,15 @@ function getAllActiveNames() {
     const names = new Set(getMethods());
     txs.forEach(t => { if (t.paidBy) names.add(t.paidBy); if (t.paidTo) names.add(t.paidTo); });
     return Array.from(names).sort();
+}
+
+function clearAllData() {
+    if (confirm('CRITICAL: This will delete ALL transactions permanently from this device. Are you sure?')) {
+        localStorage.removeItem(DB_KEY);
+        localStorage.removeItem(TRASH_KEY);
+        showToast('All Data Cleared!');
+        refreshUI();
+    }
 }
 
 function addMethod(m) {
@@ -163,7 +172,7 @@ function renderSettlement() {
   document.getElementById('settlement-tbody').innerHTML = txs.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50).map(t => `<tr><td>${t.date}</td><td><strong>${t.paidBy}</strong></td><td><strong>${t.paidTo}</strong></td><td>₹${t.amount}</td><td class="text-muted">${t.description}</td></tr>`).join('');
 }
 
-// ── IMPORT & UTILS (FIXED DOUBLE SAVE) ────────────────────────
+// ── IMPORT & UTILS ────────────────────────────────────────────
 function parseAndPreview() {
     pendingImport = SP_Parser.parseWhatsAppText(document.getElementById('wa-paste').value);
     if (pendingImport.length > 0) {
@@ -181,26 +190,15 @@ function removePending(i) { pendingImport.splice(i,1); parseAndPreview(); }
 
 async function confirmImport() {
     if (pendingImport.length === 0) return;
-    
-    // 1. Immediately copy data and clear global pending state
     const dataToSave = [...pendingImport];
     pendingImport = []; 
-    
-    // 2. Hide UI immediately so user can't click again
     document.getElementById('preview-section').style.display = 'none';
     document.getElementById('wa-paste').value = '';
-    
-    // 3. Save locally
     saveTransactions([...getTransactions(), ...dataToSave]);
-    
-    // 4. Sync to cloud in background
     showToast(`Saving ${dataToSave.length} entries...`);
-    for (const t of dataToSave) {
-        await syncToGSheet(t);
-    }
-    
+    for (const t of dataToSave) { await syncToGSheet(t); }
     showToast('Imported & Cloud Synced!'); 
-    switchTab('dashboard');
+    refreshUI();
 }
 
 function deleteTx(id) { const txs = getTransactions(); const tx = txs.find(t => t.id === id); if (!tx) return; saveTransactions(txs.filter(t => t.id !== id)); saveTrash([...getTrash(), { ...tx, deletedAt: new Date().toLocaleString() }]); showToast('Moved to Trash'); refreshUI(); }

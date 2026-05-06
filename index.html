@@ -34,7 +34,6 @@
 </aside>
 
 <main class="main">
-  <!-- DASHBOARD -->
   <section class="section active" id="tab-dashboard">
     <div class="page-header">
       <div><h2>📊 Dashboard</h2><p>Real-time financial analytics</p></div>
@@ -52,42 +51,39 @@
     </div>
   </section>
 
-  <!-- SETTLEMENT & CALCULATOR -->
   <section class="section" id="tab-settlement">
     <div class="page-header"><div><h2>⚖️ Settlement Ledger</h2><p>Analyze money flow between accounts</p></div></div>
     <div class="card mb-24" style="background: var(--surface2); border: 1px solid var(--accent-dim);">
         <h3 style="font-size:0.9rem; color:var(--accent); margin-bottom:12px;">🧮 Settlement Calculator (Multi-Select)</h3>
         <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
-            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid From (Source)</h4><div id="calc-from-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
-            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid To (Destination)</h4><div id="calc-to-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
-            <div style="min-width:250px; text-align:right;"><div class="card-label">Resulting Amount</div><div class="card-value income" style="font-size:3.5rem; line-height:1;" id="calc-total">₹0</div><button class="btn btn-ghost btn-sm mt-16" onclick="resetCalculator()">↺ Reset Calculator</button></div>
+            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid From</h4><div id="calc-from-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
+            <div style="flex:1; min-width:180px;"><h4 class="nav-label">Paid To</h4><div id="calc-to-list" class="settings-list" style="max-height:180px; overflow-y:auto; padding:10px; background:var(--bg);"></div></div>
+            <div style="min-width:250px; text-align:right;"><div class="card-label">Resulting Amount</div><div class="card-value income" style="font-size:3.5rem; line-height:1;" id="calc-total">₹0</div><button class="btn btn-ghost btn-sm mt-16" onclick="resetCalculator()">↺ Reset</button></div>
         </div>
     </div>
     <div class="cards-grid" id="settlement-summary"></div>
     <div class="table-wrap mt-24"><table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Description</th></tr></thead><tbody id="settlement-tbody"></tbody></table></div>
   </section>
 
-  <!-- ALL TRANSACTIONS -->
   <section class="section" id="tab-transactions">
     <div class="page-header"><div><h2>📋 All Transactions</h2><p>Advanced history and editing</p></div><div class="header-actions"><button class="btn btn-ghost" onclick="doExportExcel()">📥 Export Excel</button></div></div>
+    <!-- FIXED HORIZONTAL FILTER BAR -->
     <div class="filter-bar">
       <div class="filter-group"><label>🔍 Search</label><input type="text" id="f-search" placeholder="Description..." /></div>
       <div class="filter-group"><label>📅 Date</label><input type="date" id="f-date" /></div>
       <div class="filter-group"><label>🏦 From</label><select id="f-paid-by"><option value="">All</option></select></div>
       <div class="filter-group"><label>📥 To</label><select id="f-paid-to"><option value="">All</option></select></div>
       <div class="filter-group"><label>🏷️ Category</label><select id="f-cat"><option value="">All</option></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="margin-top:auto;">✕</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="margin-top:auto; height:40px;">✕</button>
     </div>
     <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>Paid By</th><th>Paid To</th><th>Description</th><th>Category</th><th>Actions</th></tr></thead><tbody id="tx-tbody"></tbody></table></div>
   </section>
 
-  <!-- TRASH SECTION -->
   <section class="section" id="tab-trash">
-    <div class="page-header"><h2>🗑️ Recycle Bin</h2><p>Restore deleted entries</p></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Permanently Empty Trash</button></div>
+    <div class="page-header"><h2>🗑️ Recycle Bin</h2><p>Restore deleted entries</p></div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Empty Trash</button></div>
     <div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Description</th><th>Deleted On</th><th>Actions</th></tr></thead><tbody id="trash-tbody"></tbody></table></div>
   </section>
 
-  <!-- IMPORT SECTION -->
   <section class="section" id="tab-import">
     <div class="page-header"><h2>➕ Add / Import Data</h2></div>
     <div class="import-tabs">
@@ -118,18 +114,20 @@
     </div>
   </section>
 
-  <!-- SETTINGS -->
   <section class="section" id="tab-settings">
     <div class="page-header"><h2>⚙️ Settings & Cloud Sync</h2></div>
     <div class="settings-grid">
       <div class="settings-section">
         <h3>📊 Google Sheets Sync</h3>
-        <p class="text-muted text-small mb-8">Paste Web App URL to sync data.</p>
         <input type="text" id="gsheet-url" style="width:100%; margin-bottom:10px;" />
-        <div class="flex gap-12">
+        <div class="flex gap-12 mb-24">
             <button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save URL</button>
-            <button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync All Data to Sheet</button>
+            <button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync All to Sheet</button>
         </div>
+        <hr style="opacity:0.1; margin:20px 0;"/>
+        <h3 style="color:var(--danger);">🚨 Maintenance</h3>
+        <p class="text-muted text-small mb-12">Use this to clear all local data if it becomes too large or messy.</p>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Reset Everything (Wipe All Data)</button>
         <p id="sync-status" class="text-small mt-8" style="color:var(--accent);"></p>
       </div>
       <div class="settings-section"><h3>🏦 Managed Accounts</h3><div class="settings-list" id="methods-list"></div><div class="add-row"><input type="text" id="new-method-input" /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div>
@@ -142,7 +140,7 @@
 <div id="toast-container"></div>
 
 <script src="parser.js"></script>
-<script src="export.js"></script>
 <script src="app.js"></script>
+<script src="export.js"></script>
 </body>
 </html>
