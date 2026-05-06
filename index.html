@@ -23,9 +23,9 @@
   <div class="nav-section">
     <div class="nav-label">Management</div>
     <div class="nav-item" data-tab="transactions"><span class="nav-icon">📋</span> All Transactions</div>
-    <div class="nav-item" data-tab="import"><span class="nav-icon">➕</span> Add / Import Data</div>
+    <div class="nav-item" data-tab="add"><span class="nav-icon">➕</span> Add Transaction</div>
     <div class="nav-item" data-tab="customer"><span class="nav-icon">🚜</span> Customer Ledger</div>
-    <div class="nav-item" data-tab="trash"><span class="nav-icon">🗑️</span> Recycle Bin (Trash)</div>
+    <div class="nav-item" data-tab="trash"><span class="nav-icon">🗑️</span> Recycle Bin</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Configuration</div>
@@ -65,27 +65,34 @@
     <div class="table-wrap"><div style="padding:16px 24px; border-bottom:1px solid rgba(255,255,255,0.05);"><h3 style="font-size:0.9rem; font-weight:800;">🏁 Final Conclusive Summary</h3></div><table><thead><tr><th style="padding-left:24px;">From</th><th>To</th><th>Total Amount</th><th style="text-align:right; padding-right:24px;">Status</th></tr></thead><tbody id="settlement-tbody"></tbody></table></div>
   </section>
 
-  <!-- DATA IMPORT HUB -->
-  <section class="section" id="tab-import">
-    <div class="page-header"><div><h2>➕ Data Management</h2><p style="font-size:0.75rem; opacity:0.6;">WhatsApp import and manual ledger entry</p></div></div>
-    <div style="display:grid; grid-template-columns: 1.2fr 1.8fr; gap:20px; align-items: start;">
+  <!-- ADD / IMPORT SECTION -->
+  <section class="section" id="tab-add">
+    <div class="page-header"><div><h2>➕ Add Transaction</h2><p style="font-size:0.75rem; opacity:0.6;">Manual entry or WhatsApp import</p></div></div>
+    
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+        <!-- Manual Form -->
         <div class="card">
-            <h3 style="margin-bottom:16px; font-size:1rem;">📱 WhatsApp Import</h3>
-            <label class="nav-label">Paste Chat History</label>
-            <textarea id="wa-paste" style="height:150px; margin:8px 0 16px 0;" placeholder="Paste chat data..."></textarea>
-            <div class="flex gap-12"><button class="btn btn-primary" style="flex:1;" onclick="parseAndPreview()">🔍 Parse</button><button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">📁 .txt</button><input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(this)" /></div>
-            <div id="preview-section" style="display:none; margin-top:24px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><h4 style="font-size:0.8rem;">Found <span id="preview-count">0</span> Records</h4><button class="btn btn-primary btn-sm" onclick="confirmImport()">✅ Save All</button></div><div class="table-wrap" style="max-height:200px; overflow-y:auto;"><table style="font-size:0.7rem;"><thead><tr><th>Amt</th><th>From</th><th>To</th><th>Cust?</th><th></th></tr></thead><tbody id="preview-tbody"></tbody></table></div></div>
-        </div>
-        <div class="card">
-            <h3 style="margin-bottom:16px; font-size:1rem;">✏️ Manual Entry</h3>
+            <h3 style="margin-bottom:16px; font-size:1rem;">✏️ Quick Manual Entry</h3>
             <form onsubmit="event.preventDefault(); saveManualTx();">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;"><div><label class="nav-label">Date</label><input type="date" id="m-date" required style="margin-top:4px;" onclick="this.showPicker()"/></div><div><label class="nav-label">Amount</label><input type="number" id="m-amount" required style="margin-top:4px;" placeholder="0.00"/></div></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;"><div><label class="nav-label">Paid By</label><input list="methods-dl" id="m-paid-by" required style="margin-top:4px;" oninput="toggleDescriptionField()"/></div><div><label class="nav-label">Paid To</label><input list="methods-dl" id="m-paid-to" required style="margin-top:4px;" oninput="toggleDescriptionField()"/></div></div>
                 <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px;"><div><label class="nav-label">Description</label><div class="autocomplete-container"><input type="text" id="m-desc" disabled required style="margin-top:4px;" placeholder="Fill From/To first..." onfocus="showAutocomplete()" oninput="filterAutocomplete()"/><div id="m-desc-results" class="autocomplete-results"></div></div></div><div><label class="nav-label">Category</label><select id="m-cat" style="margin-top:4px;"></select></div></div>
                 <div id="m-deal-total-group" style="display:none; margin-bottom:16px;"><label class="nav-label">Total Deal Amount (Target)</label><input type="number" id="m-deal-total" placeholder="Enter total deal value..." style="margin-top:4px; border-color:var(--success);"/></div>
-                <div style="margin-bottom:24px;"><label class="dropdown-item" style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" id="m-is-customer" style="width:18px; height:18px;"/> <span style="font-size:0.85rem; font-weight:600;">🚜 Mark as Customer Payment (Deal)</span></label></div>
+                <div style="margin-bottom:24px;"><label class="dropdown-item" style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" id="m-is-customer" style="width:18px; height:18px;"/> <span style="font-size:0.85rem; font-weight:600;">🚜 Mark as Customer Payment</span></label></div>
                 <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;">✅ Save Transaction</button>
             </form>
+        </div>
+
+        <!-- WhatsApp Parser -->
+        <div class="card">
+            <h3 style="margin-bottom:16px; font-size:1rem;">📱 WhatsApp Parser</h3>
+            <textarea id="wa-paste" style="height:120px; margin-bottom:12px;" placeholder="Paste chat here..."></textarea>
+            <div class="flex gap-12"><button class="btn btn-primary" style="flex:1;" onclick="parseAndPreview()">🔍 Parse</button><button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">📁 .txt</button><input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(this)" /></div>
+            
+            <div id="preview-section" style="display:none; margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h4 style="font-size:0.75rem;">Preview (<span id="preview-count">0</span>)</h4><button class="btn btn-primary btn-sm" onclick="confirmImport()">Save All</button></div>
+                <div class="table-wrap" style="max-height:180px; overflow-y:auto;"><table style="font-size:0.7rem;"><thead><tr><th>Amt</th><th>From</th><th>To</th><th>Cust?</th><th></th></tr></thead><tbody id="preview-tbody"></tbody></table></div>
+            </div>
         </div>
     </div>
   </section>
@@ -162,12 +169,28 @@
     </div>
   </section>
 
-  <section class="section" id="tab-settings"><div class="page-header"><h2>⚙️ Settings</h2></div><div class="settings-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card"><h3>📊 Sync</h3><input type="text" id="gsheet-url" class="mt-16 mb-16" placeholder="Web App URL..." /><div class="flex gap-12"><button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save</button><button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync</button></div><p id="sync-status" class="mt-16" style="font-size:0.7rem;"></p><hr style="opacity:0.1; margin:20px 0;"/><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Wipe Data</button></div><div class="card"><h3>🏦 Account Classification</h3><p style="font-size:0.65rem; opacity:0.6; margin-bottom:12px;">Mark accounts that are **Online**. Others will be **Cash**.</p><div id="methods-online-list" class="mt-16 mb-16" style="max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;"></div><div class="flex gap-12"><input type="text" id="new-method-input" placeholder="New Account..." /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div></div></section>
+  <section class="section" id="tab-settings">
+    <div class="page-header"><h2>⚙️ Settings</h2></div>
+    <div class="settings-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+        <div class="card">
+            <h3>📊 Sync</h3>
+<input type="text" id="gsheet-url" class="mt-16 mb-16" placeholder="Web App URL..." /><div class="flex gap-12"><button class="btn btn-primary btn-sm" onclick="saveGSheetUrl()">💾 Save</button><button class="btn btn-ghost btn-sm" onclick="syncAllToGSheet()">📤 Sync</button></div><p id="sync-status" class="mt-16" style="font-size:0.7rem;"></p><hr style="opacity:0.1; margin:20px 0;"/><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Wipe Data</button></div><div class="card"><h3>🏦 Account Classification</h3><p style="font-size:0.65rem; opacity:0.6; margin-bottom:12px;">Mark accounts that are **Online**. Others will be **Cash**.</p><div id="methods-online-list" class="mt-16 mb-16" style="max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;"></div><div class="flex gap-12"><input type="text" id="new-method-input" placeholder="New Account..." /><button class="btn btn-primary btn-sm" onclick="addMethodFromInput()">+ Add</button></div></div></div></section>
 </main>
 
 <datalist id="methods-dl"></datalist>
 <datalist id="deals-dl"></datalist>
+<div class="bottom-nav">
+    <div class="bottom-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><span>🏠</span><span>Dash</span></div>
+    <div class="bottom-nav-item" data-tab="add" onclick="switchTab('add')"><span>➕</span><span>Add</span></div>
+    <div class="bottom-nav-item" data-tab="customer" onclick="switchTab('customer')"><span>🚜</span><span>Ledger</span></div>
+    <div class="bottom-nav-item" data-tab="transactions" onclick="switchTab('transactions')"><span>📋</span><span>TXs</span></div>
+    <div class="bottom-nav-item" data-tab="settings" onclick="switchTab('settings')"><span>⚙️</span><span>Set</span></div>
+</div>
+
 <div id="toast-container"></div>
-<script src="parser.js"></script><script src="app.js"></script><script src="export.js"></script>
+<script src="app.js"></script>
+<script src="parser.js"></script>
+<script src="export.js"></script>
+
 </body>
 </html>
